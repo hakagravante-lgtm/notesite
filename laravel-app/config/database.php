@@ -48,11 +48,20 @@ return [
                 $isAbsolute = Str::startsWith($database, '/') ||
                     (strlen($database) >= 3 && $database[1] === ':' && ($database[2] === '\\' || $database[2] === '/'));
 
-                if ($isAbsolute) {
-                    return $database;
+                if (!$isAbsolute) {
+                    $database = base_path($database);
                 }
 
-                return base_path($database);
+                $directory = dirname($database);
+                if (!is_dir($directory)) {
+                    mkdir($directory, 0777, true);
+                }
+
+                if (!file_exists($database)) {
+                    touch($database);
+                }
+
+                return $database;
             })(),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
