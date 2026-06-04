@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Notetype</title>
+<title>Notesite</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -284,13 +284,24 @@ function toast(msg,type='ok'){
 function loading(on){ g('ld').style.display=on?'flex':'none'; }
 
 // ── API 
+function apiPath(){
+  return new URL('api.php', window.location.href).toString();
+}
+
 async function api(action,data=null){
   try{
-    const opts={method:data!==null?'POST':'GET',headers:{}};
-    if(data!==null){opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(data);}
-    const res=await fetch(`api.php?a=${action}`,opts);
-    return await res.json();
-  }catch(e){ return {error:'Network error. Is XAMPP running?'}; }
+    const opts={method:data!==null?'POST':'GET',headers:{},credentials:'same-origin'};
+    if(data!==null){
+      opts.headers['Content-Type']='application/json';
+      opts.headers['Accept']='application/json';
+      const xsrf=document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+      if(xsrf){ opts.headers['X-XSRF-TOKEN']=decodeURIComponent(xsrf[1]); opts.headers['X-CSRF-TOKEN']=decodeURIComponent(xsrf[1]); }
+      opts.body=JSON.stringify(data);
+    }
+    const res=await fetch(`${apiPath()}?a=${action}`,opts);
+    const text=await res.text();
+    try{return text?JSON.parse(text):{};}catch{return {error:text||'Unexpected response.'};}
+  }catch(e){ return {error:'Network/server error. Please reload the page and try again.'}; }
 }
 
 // ── Session check on load 
@@ -327,7 +338,7 @@ async function login(){
   document.querySelectorAll('.em').forEach(x=>x.style.display='none');
   if(!e){g('lee').style.display='block';return;}
   loading(true);
-  const r=await api('login',{email:e,pass:p});
+  const r=await api('login',{email:e,password:p,pass:p});
   loading(false);
   if(r.error){g('lpe').textContent=r.error;g('lpe').style.display='block';return;}
   D.me=r.user;

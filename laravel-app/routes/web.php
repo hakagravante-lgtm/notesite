@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,7 +22,9 @@ Route::get('/', function () {
     return response(file_get_contents($path), 200, ['Content-Type' => 'text/html']);
 });
 
-Route::any('/api.php', [NotesiteApiController::class, 'handle'])->middleware('web');
+Route::any('/api.php', [NotesiteApiController::class, 'handle'])
+    ->middleware('web')
+    ->withoutMiddleware([VerifyCsrfToken::class]);
 
 Route::get('/welcome', function () {
     return view('welcome');

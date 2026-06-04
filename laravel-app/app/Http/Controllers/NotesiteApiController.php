@@ -53,7 +53,9 @@ class NotesiteApiController extends Controller
 
     private function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        $email = trim((string) $request->input('email', ''));
+        $password = (string) $request->input('password', $request->input('pass', ''));
+        $credentials = ['email' => $email, 'password' => $password];
 
         if (!filter_var($credentials['email'] ?? '', FILTER_VALIDATE_EMAIL)) {
             return response()->json(['error' => 'Please enter a valid email.']);
